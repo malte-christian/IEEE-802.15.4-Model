@@ -47,25 +47,26 @@ for nNodes = minNodeNumber:maxNodeNumber
             end
         end
         
+        for n = 1:nNodes
+            nodeList(n).nextStep(channelState);
+            if strcmp(nodeList(n).getState(), 'idle')
+                packetsSend = nodeList(n).getSend() + nodeList(n).getNotSend();
+                if packetsSend <= packetNumber
+                    % results(n, packagesSend, 1) = slots * 0.000016;
+                    % results(n, packagesSend, 2) = nodes(n).getThroughput();
+                    % nodes(n).reset();
+                    nodeList(n).sendPacket(100,4);
+                end
+            end
+        end
+        
+        % Make CLI Ouput after round
         if ~run
             throughput(nNodes) = (throughputSum / nNodes) /  1000;
             delay(nNodes) = delaySum / nNodes;
             fprintf('CCA Failure sum: %d\n', ccaFailureSum)
             fprintf('Throughput mean: %f\n', throughput(nNodes))
             fprintf('Delay mean: %f\n', delay(nNodes))
-        end
-        
-        for n = 1:nNodes
-            nodeList(n).nextStep(channelState);
-            if strcmp(nodeList(n).getState(), 'idle')
-                packetsSend = nodeList(n).getSend() + nodeList(n).getNotSend();
-                if packetsSend <= packetNumber
-                    %                         results(n, packagesSend, 1) = slots * 0.000016;
-                    %                         results(n, packagesSend, 2) = nodes(n).getThroughput();
-                    %nodes(n).reset();
-                    nodeList(n).sendPacket(100,4);
-                end
-            end
         end
     end
 end
