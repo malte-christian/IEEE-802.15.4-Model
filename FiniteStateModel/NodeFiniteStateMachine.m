@@ -3,6 +3,7 @@ classdef NodeFiniteStateMachine < handle
     %   Detailed explanation goes here
     
     properties
+        logData = [];
         transfered = 0;
         state;
         TTrans;
@@ -77,7 +78,7 @@ classdef NodeFiniteStateMachine < handle
             obj.state = nextStep;
         end
         
-        function sendPackage(obj, payload, addressLength)
+        function sendPacket(obj, payload, addressLength)
             obj.state = 'backoff';
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength);
@@ -87,8 +88,8 @@ classdef NodeFiniteStateMachine < handle
         function setBackOffTime(obj)
             rng('shuffle'); % kann auch weg
             TBoSlots = @(TS) 20; % Time for a back off slot
-            BE = min(obj.BE + obj.CSMABackoffs, obj.maxBE);
-            obj.TBo = randi([0 (2^BE -1)]) * TBoSlots(obj.TS);
+            BE = min(obj.BE + obj.CSMABackoffs, obj.maxBE); %#ok<PROP>
+            obj.TBo = randi([0 (2^BE -1)]) * TBoSlots(obj.TS); %#ok<PROP>
             % obj.TBo = 3.5 * TBoSlots(obj.TS);
         end
         

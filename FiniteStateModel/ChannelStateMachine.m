@@ -5,7 +5,7 @@ function ChannelStateMachine()
 % initialise nodes
 minNodeNumber = 1;
 maxNodeNumber = 5;
-packageNumber = 100;
+packetNumber = 100;
 
 throughput(maxNodeNumber) = 0;
 delay(maxNodeNumber) = 0;
@@ -15,7 +15,7 @@ for nNodes = minNodeNumber:maxNodeNumber
     
     % preallocate memory with empty constructor
     clear nodes;
-    nodeList(1,nNodes) = NodeFiniteStateMachine();
+    nodeList(1,nNodes) = NodeFiniteStateMachine(); %#ok<AGROW>
     for n=1:nNodes
         nodeList(n) = NodeFiniteStateMachine();
         nodeList(n).sendPackage(100,4);
@@ -58,12 +58,12 @@ for nNodes = minNodeNumber:maxNodeNumber
         for n = 1:nNodes
             nodeList(n).nextStep(channelState);
             if strcmp(nodeList(n).getState(), 'idle')
-                packagesSend = nodeList(n).getSend() + nodeList(n).getNotSend();
-                if packagesSend <= packageNumber
+                packetsSend = nodeList(n).getSend() + nodeList(n).getNotSend();
+                if packetsSend <= packetNumber
                     %                         results(n, packagesSend, 1) = slots * 0.000016;
                     %                         results(n, packagesSend, 2) = nodes(n).getThroughput();
                     %nodes(n).reset();
-                    nodeList(n).sendPackage(100,4);
+                    nodeList(n).sendPacket(100,4);
                 end
             end
         end
