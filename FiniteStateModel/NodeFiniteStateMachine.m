@@ -42,9 +42,8 @@ classdef NodeFiniteStateMachine < handle
            state = obj.state;
         end
         
-        function nextStep(obj, channelState)
-           
-            nextStep = obj.state;
+        function nextStep(obj, channelState) 
+           nextStep = obj.state;
            switch obj.state
                case 'cca'
                    obj.slots = obj.slots + 1;
@@ -86,32 +85,33 @@ classdef NodeFiniteStateMachine < handle
         end
         
         function setBackOffTime(obj)
-             rng('shuffle'); % kann auch weg
-             TBoSlots = @(TS) 20; % Time for a back off slot 
-             BE = min(obj.BE + obj.CSMABackoffs, obj.maxBE);
-             obj.TBo = randi([0 (2^BE -1)]) * TBoSlots(obj.TS);
+            rng('shuffle'); % kann auch weg
+            TBoSlots = @(TS) 20; % Time for a back off slot 
+            BE = min(obj.BE + obj.CSMABackoffs, obj.maxBE);
+            obj.TBo = randi([0 (2^BE -1)]) * TBoSlots(obj.TS);
             % obj.TBo = 3.5 * TBoSlots(obj.TS);
         end
         
         function setTransmissionTime(obj,payload, addressLength)
-             % Frame delay
-             TFrame = @(x, RData, LAddress) 8 * (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr ) / obj.SymbolsPerSlot;
-             % Acknowledgement delay
-             TAck = @(RData) 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr) / obj.SymbolsPerSlot;
+            
+            % Frame delay
+            TFrame = @(x, RData, LAddress) 8 * (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr ) / obj.SymbolsPerSlot;
+            % Acknowledgement delay
+            TAck = @(RData) 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr) / obj.SymbolsPerSlot;
              
-                       % Inter frame space delay
+            % Inter frame space delay
             function y = TIfs(x, TS, LAddress)
-                LIFS     = @(TS) 40; % Long inter frame space
-                SIFS     = @(TS) 12; % Short inter frame space
+                LIFS = @(TS) 40; % Long inter frame space
+                SIFS = @(TS) 12; % Short inter frame space
                 if (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr <= 18) % CHECKEN! (ist nur geraten)
                     y = SIFS(TS);
                 else
                     y = LIFS(TS);
                 end
             end 
-             TTa = @(TS) 12; % Tournaround time
+            TTa = @(TS) 12; % Tournaround time
             
-             obj.TTrans = TFrame(payload, obj.RData, addressLength) + TAck(obj.RData) + TIfs(payload, obj.TS, addressLength) + TTa(obj.TS);
+            obj.TTrans = TFrame(payload, obj.RData, addressLength) + TAck(obj.RData) + TIfs(payload, obj.TS, addressLength) + TTa(obj.TS);
         end
         
         function TP = getThroughput(obj) 
