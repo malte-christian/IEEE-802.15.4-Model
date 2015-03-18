@@ -89,11 +89,11 @@ classdef NodeFiniteStateMachine < handle
             
             switch obj.state
                 case 'backoff'
-                   sleepSlots = obj.stateStartSlot + obj.TBo - slot;
+                    sleepSlots = obj.stateStartSlot + obj.TBo - slot;
                 case 'transmission'
-                   sleepSlots = obj.stateStartSlot + obj.TTrans - slot;
+                    sleepSlots = obj.stateStartSlot + obj.TTrans - slot;
                 otherwise
-                   sleepSlots = 0;
+                    sleepSlots = 0;
             end
             
         end
@@ -115,34 +115,39 @@ classdef NodeFiniteStateMachine < handle
         function setTransmissionTime(obj,payload, addressLength, ack)
             
             % Frame delay
-            TFrame = @(x, RData, LAddress) 8 * (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr ) / obj.SymbolsPerSlot;
+            TFrame = @(x, RData, LAddress) 8 * ...
+                (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr )...
+                / obj.SymbolsPerSlot;
             
             % Acknowledgement delay
-            TAck = @(RData) 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr) / obj.SymbolsPerSlot;
+            TAck = @(RData) 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr)...
+                / obj.SymbolsPerSlot;
             
             % Inter frame space delay
             function y = TIfs(x, LAddress)
-                if (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr <= 18) % TODO: CHECKEN! (ist nur geraten)
+                if (obj.LPhy + obj.LMac_Hdr + LAddress + x...
+                        + obj.LMac_Ftr <= 18) % TODO: CHECKEN! (ist nur geraten)
                     y = obj.SIFS;
                 else
                     y = obj.LIFS;
                 end
             end
             
-            obj.TTrans = TFrame(payload, obj.RData, addressLength) + TIfs(payload, addressLength) + obj.TTa;
+            obj.TTrans = TFrame(payload, obj.RData, addressLength)...
+                + TIfs(payload, addressLength) + obj.TTa;
             
             if ack
                 obj.TTrans = obj.TTrans + + TAck(obj.RData);
             end
         end
-%         
-%         function TP = getThroughput(obj)
-%             TP = 8 * obj.transfered / (obj.slots * obj.TS);
-%         end
-%         
-%         function delay = getDelay(obj)
-%             delay = (obj.slots * obj.TS) / obj.send;
-%         end
+        %
+        %         function TP = getThroughput(obj)
+        %             TP = 8 * obj.transfered / (obj.slots * obj.TS);
+        %         end
+        %
+        %         function delay = getDelay(obj)
+        %             delay = (obj.slots * obj.TS) / obj.send;
+        %         end
     end
 end
 

@@ -21,18 +21,15 @@ for nNodes = minNodeNumber:maxNodeNumber
         nodeList(n).sendPacket(100,4);
     end
     
+    % Reset variables
     run = true;
     slot = 0;
+    
     while run
         clear maxSleepSlots;
         
         slot = slot + 1;
         channelState = 'clear';
-        
-        
-        throughputSum = 0;
-        delaySum = 0;
-        ccaFailureSum = 0;
         
         % Determine current channel state
         for node = nodeList
@@ -57,14 +54,16 @@ for nNodes = minNodeNumber:maxNodeNumber
             
             % Invoke next transmission
             if strcmp(nodeList(n).getState(), 'idle')
-                packetsSend = nodeList(n).getSend() + nodeList(n).getNotSend();
+                packetsSend = nodeList(n).getSend()...
+                    + nodeList(n).getNotSend();
                 if packetsSend <= packetNumber
                     nodeList(n).sendPacket(100,4);
                 end
             end
             
             %  Determine max sleep slots
-            if ~exists('maxSleepSlots', 'var') || nodeList(n).getMaxSleepSlots(slot) < maxSleepSlots
+            if ~exists('maxSleepSlots', 'var')...
+                    || nodeList(n).getMaxSleepSlots(slot) < maxSleepSlots
                maxSleepSlots = nodeList(n).getMaxSleepSlots(slot);
             end
         end
