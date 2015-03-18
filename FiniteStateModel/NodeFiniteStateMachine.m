@@ -1,6 +1,16 @@
 classdef NodeFiniteStateMachine < handle
-    %NODECLASS Summary of this class goes here
-    %   Detailed explanation goes here
+    
+    properties(Constant)
+        BE = 3;
+        maxBE = 5;
+        SymbolsPerSlot = 4;
+        RData = 250 * 1000;
+        maxCSMABackoffs = 4;
+        TS = 0.000016; % Time per Slot
+        LPhy = 6; % Length of the PHY header
+        LMac_Hdr = 3; % Length of the MAC header
+        LMac_Ftr = 2; % Length of the MAC footer
+    end
     
     properties
         logData = [];
@@ -9,19 +19,10 @@ classdef NodeFiniteStateMachine < handle
         TTrans;
         TBo;
         currentPayload = 0;
-        BE = 3;
-        maxBE = 5;
         slots = 0;
-        TS = 0.000016;
-        SymbolsPerSlot = 4;
-        RData = 250 *1000;
         send = 0;
         notSend = 0;
-        maxCSMABackoffs = 4;
         CSMABackoffs = 0;
-        LPhy     = 6; % Length of the PHY header
-        LMac_Hdr = 3; % Length of the MAC header
-        LMac_Ftr = 2; % Length of the MAC footer
     end
     
     methods
