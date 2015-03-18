@@ -1,6 +1,4 @@
 function ChannelStateMachine()
-%CHANNELSTATEMACHINE Summary of this function goes here
-%   Detailed explanation goes here
 
 % initialise nodes
 minNodeNumber = 1;
@@ -13,7 +11,6 @@ delayLog(maxNodeNumber) = 0;
 for nNodes = minNodeNumber:maxNodeNumber
     fprintf('\nCalculating mean throughput of %d nodes...\n\n', nNodes)
     
-    
     clear nodeList;
     
     % preallocate memory with empty constructor
@@ -25,10 +22,13 @@ for nNodes = minNodeNumber:maxNodeNumber
     end
     
     run = true;
-    slots = 0;
+    slot = 0;
     while run
-        slots = slots + 1;
+        clear maxSleepSlots;
+        
+        slot = slot + 1;
         channelState = 'clear';
+        
         
         throughputSum = 0;
         delaySum = 0;
@@ -53,14 +53,24 @@ for nNodes = minNodeNumber:maxNodeNumber
         
         % Determine next channel state
         for n = 1:nNodes
-            nodeList(n).nextStep(channelState);
+            nodeList(n).nextStep(slot, channelState);
+            
+            % Invoke next transmission
             if strcmp(nodeList(n).getState(), 'idle')
                 packetsSend = nodeList(n).getSend() + nodeList(n).getNotSend();
                 if packetsSend <= packetNumber
                     nodeList(n).sendPacket(100,4);
                 end
             end
+            
+            %  Determine max sleep slots
+            if ~exists('maxSleepSlots', 'var') || nodeList(n).getMaxSleepSlots(slot) < maxSleepSlots
+               maxSleepSlots = nodeList(n).getMaxSleepSlots(slot);
+            end
         end
+        
+        % sleep...
+        slot = slot + maxSleepSlots;
         
         % Make CLI Ouput after test run
         if ~run
