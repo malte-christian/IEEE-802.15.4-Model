@@ -18,34 +18,26 @@ for nNodes = minNodeNumber:maxNodeNumber
     
     for n=1:nNodes
         nodeList(n) = NodeFiniteStateMachine(); %#ok<AGROW>
-        nodeList(n).sendPacket(100,4);
+        % nodeList(n).sendPacket(100,4);
     end
     
     % Reset variables
     run = true;
     slot = 0;
-    
+     
     while run
         clear maxSleepSlots;
         
         slot = slot + 1;
         channelState = 'clear';
-        
+         ccaFailureSum = 0;
         % Determine current channel state
         for node = nodeList
             if strcmp(node.getState(), 'transmission')
                 channelState = 'busy';
             end
-            
-            throughputSum = throughputSum + node.getThroughput();
-            delaySum = delaySum + node.getDelay();
+           
             ccaFailureSum = ccaFailureSum + node.getNotSend();
-            
-            % Stop if all nodes are idle
-            run = false;  
-            if ~strcmp(node.getState(), 'idle')
-                run = true;
-            end
         end
         
         % Determine next channel state
@@ -57,12 +49,18 @@ for nNodes = minNodeNumber:maxNodeNumber
                 packetsSend = nodeList(n).getSend()...
                     + nodeList(n).getNotSend();
                 if packetsSend <= packetNumber
-                    nodeList(n).sendPacket(100,4);
+                    nodeList(n).sendPacket(slot, 100, 4, false);
                 end
             end
             
+            % Stop if all nodes are idle
+            run = false;  
+            if ~strcmp(node.getState(), 'idle')
+                run = true;
+            end
+            
             %  Determine max sleep slots
-            if ~exists('maxSleepSlots', 'var')...
+            if ~exist('maxSleepSlots', 'var')...
                     || nodeList(n).getMaxSleepSlots(slot) < maxSleepSlots
                maxSleepSlots = nodeList(n).getMaxSleepSlots(slot);
             end
@@ -73,11 +71,7 @@ for nNodes = minNodeNumber:maxNodeNumber
         
         % Make CLI Ouput after test run
         if ~run
-            throughputLog(nNodes) = (throughputSum / nNodes) /  1000;
-            delayLog(nNodes) = delaySum / nNodes;
             fprintf('CCA Failure sum: %d\n', ccaFailureSum)
-            fprintf('Throughput mean: %f\n', throughputLog(nNodes))
-            fprintf('Delay mean: %f\n', delayLog(nNodes))
         end
     end
 end

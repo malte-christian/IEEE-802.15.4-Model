@@ -14,20 +14,23 @@ classdef NodeFiniteStateMachine < handle
         SIFS = 12; % Short inter frame space
         TTa = 12; % Tournaround slots
         TBoSlots = 20; % Number of back off slot
+        
+        % Log Data indices%
+        startSlotIndex = 1;
+        endSlotIndex = 2;
+        transferredIndex = 3;
+        payloadIndex = 4;
     end
     
     properties
-        logData = [];
-        transfered = 0;
+        logDataList = [];
         state = 'idle';
         stateStartSlot = 0;
-        stateEndSlot = 0;
         TTrans;
         TBo;
-        currentPayload = 0;
-        slots = 0;
         send = 0;
         notSend = 0;
+        currentPayload = 0;
         CSMABackoffs = 0;
     end
     
@@ -40,12 +43,12 @@ classdef NodeFiniteStateMachine < handle
             notSend = obj.notSend;
         end
         
-        function reset(obj)
-            obj.transfered = 0;
-            obj.slots = 0;
-            obj.CSMABackoffs = 0;
-        end
-        
+%         function reset(obj)
+%             obj.transfered = 0;
+%             obj.slots = 0;
+%             obj.CSMABackoffs = 0;
+%         end
+%         
         function state = getState(obj)
             state = obj.state;
         end
@@ -56,11 +59,20 @@ classdef NodeFiniteStateMachine < handle
                 case 'cca'
                     if strcmp(channelState, 'clear')
                         nextStep = 'transmission';
+                        
+                        obj.CSMABackoffs = 0;
                     else
                         obj.CSMABackoffs = obj.CSMABackoffs + 1;
                         if obj.CSMABackoffs > obj.maxCSMABackoffs
+                            
+                            % Set log data
+                            obj.logDataList(end, obj.endSlotIndex) = slot;
+                            obj.logDataList(end, obj.transferredIndex) = false;
+                            
                             obj.notSend = obj.notSend + 1;
                             nextStep = 'idle';
+                            
+                            obj.CSMABackoffs = 0;
                         else
                             nextStep = 'backoff';
                             obj.setBackOffTime();
@@ -74,7 +86,10 @@ classdef NodeFiniteStateMachine < handle
                     if slot - obj.stateStartSlot >= obj.TTrans
                         nextStep = 'idle';
                         obj.send = obj.send + 1;
-                        obj.transfered = obj.transfered + obj.currentPayload;
+                        
+                        % Set log data
+                        obj.logDataList(end, obj.endSlotIndex) = slot;
+                        obj.logDataList(end, obj.transferredIndex) = true;
                     end
             end
             
@@ -98,11 +113,17 @@ classdef NodeFiniteStateMachine < handle
             
         end
         
-        function sendPacket(obj, payload, addressLength, ack)
+        function sendPacket(obj, slot, payload, addressLength, ack)
             obj.state = 'backoff';
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength, ack);
             obj.currentPayload = payload;
+            
+            logData(obj.startSlotIndex) = slot;
+            logData(obj.payloadIndex) = payload;
+            
+            obj.logDataList = [obj.logDataList; logData];
+            
         end
         
         function setBackOffTime(obj)
@@ -137,17 +158,9 @@ classdef NodeFiniteStateMachine < handle
                 + TIfs(payload, addressLength) + obj.TTa;
             
             if ack
-                obj.TTrans = obj.TTrans + + TAck(obj.RData);
+                obj.TTrans = obj.TTrans + TAck(obj.RData);
             end
         end
-        %
-        %         function TP = getThroughput(obj)
-        %             TP = 8 * obj.transfered / (obj.slots * obj.TS);
-        %         end
-        %
-        %         function delay = getDelay(obj)
-        %             delay = (obj.slots * obj.TS) / obj.send;
-        %         end
     end
 end
 
