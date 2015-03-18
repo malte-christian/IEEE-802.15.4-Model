@@ -18,51 +18,50 @@ for nNodes = minNodeNumber:maxNodeNumber
     
     for n=1:nNodes
         nodeList(n) = NodeFiniteStateMachine(); %#ok<AGROW>
-        % nodeList(n).sendPacket(100,4);
+        % node.sendPacket(100,4);
     end
     
     % Reset variables
     run = true;
     slot = 0;
-     
+    
     while run
         clear maxSleepSlots;
         
         slot = slot + 1;
         channelState = 'clear';
-         ccaFailureSum = 0;
+        run = false;
+         
         % Determine current channel state
         for node = nodeList
             if strcmp(node.getState(), 'transmission')
                 channelState = 'busy';
             end
-           
-            ccaFailureSum = ccaFailureSum + node.getNotSend();
         end
         
         % Determine next channel state
-        for n = 1:nNodes
-            nodeList(n).nextStep(slot, channelState);
+        for node = nodeList
+            node.nextStep(slot, channelState);
             
             % Invoke next transmission
-            if strcmp(nodeList(n).getState(), 'idle')
-                packetsSend = nodeList(n).getSend()...
-                    + nodeList(n).getNotSend();
+            if strcmp(node.getState(), 'idle')
+                packetsSend = node.getSend()...
+                    + node.getNotSend();
                 if packetsSend <= packetNumber
-                    nodeList(n).sendPacket(slot, 100, 4, false);
+                    node.sendPacket(slot, 100, 4, true);
                 end
             end
             
             % Stop if all nodes are idle
-            run = false;  
+           
             if ~strcmp(node.getState(), 'idle')
                 run = true;
             end
             
             %  Determine max sleep slots
             if ~exist('maxSleepSlots', 'var')...
-                    || nodeList(n).getMaxSleepSlots(slot) < maxSleepSlots
-               maxSleepSlots = nodeList(n).getMaxSleepSlots(slot);
+                    || node.getMaxSleepSlots(slot) < maxSleepSlots
+                maxSleepSlots = node.getMaxSleepSlots(slot);
             end
         end
         
@@ -71,6 +70,14 @@ for nNodes = minNodeNumber:maxNodeNumber
         
         % Make CLI Ouput after test run
         if ~run
+            ccaFailureSum = 0;
+            througputSum = 0;
+            for node = nodeList
+                througputSum = througputSum + node.getThroughput();
+                ccaFailureSum = ccaFailureSum + node.getNotSend();
+            end
+            throughputLog(nNodes) = througputSum / nNodes;
+            fprintf('Throughput mean: %f kbits\n', throughputLog(nNodes))
             fprintf('CCA Failure sum: %d\n', ccaFailureSum)
         end
     end

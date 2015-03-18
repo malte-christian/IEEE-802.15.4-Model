@@ -30,7 +30,6 @@ classdef NodeFiniteStateMachine < handle
         TBo;
         send = 0;
         notSend = 0;
-        currentPayload = 0;
         CSMABackoffs = 0;
     end
     
@@ -117,7 +116,6 @@ classdef NodeFiniteStateMachine < handle
             obj.state = 'backoff';
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength, ack);
-            obj.currentPayload = payload;
             
             logData(obj.startSlotIndex) = slot;
             logData(obj.payloadIndex) = payload;
@@ -160,6 +158,17 @@ classdef NodeFiniteStateMachine < handle
             if ack
                 obj.TTrans = obj.TTrans + TAck(obj.RData);
             end
+        end
+        
+        function throughput = getThroughput(obj)
+            payload = 0;
+            for i = 1:size(obj.logDataList, 1)
+                payload = payload + obj.logDataList(i, obj.payloadIndex);
+            end
+            
+            throughput = (payload * 8) ...
+                / ((obj.logDataList(end, obj.endSlotIndex)...
+                - obj.logDataList(1, obj.startSlotIndex)) * obj.TS) / 1000;
         end
     end
 end
