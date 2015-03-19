@@ -1,4 +1,4 @@
-function ChannelStateMachine()
+function logData =  ChannelStateMachine()
 
                      % Test Configurations %
 
@@ -35,8 +35,8 @@ payload = 0;
 
                     % Channel State Machine %
 
-throughputLog(maxNodeNumber) = 0;
-delayLog(maxNodeNumber) = 0;
+% logData(number of nodes)(node id)(throughput | delay)(log date)                    
+logData = cell(maxNodeNumber, 1);
 
 for nNodes = minNodeNumber:maxNodeNumber
     fprintf('\nCalculating mean throughput of %d nodes...\n\n', nNodes)
@@ -48,12 +48,14 @@ for nNodes = minNodeNumber:maxNodeNumber
     
     for n=1:nNodes
         nodeList(n) = NodeFiniteStateMachine(n);
-        % node.sendPacket(100,4);
     end
     
     % Reset variables
     run = true;
     slot = 0;
+    
+    % prepare logData
+    logData{nNodes} = cell(nNodes, 1);
     
     while run
         clear maxSleepSlots;
@@ -97,20 +99,28 @@ for nNodes = minNodeNumber:maxNodeNumber
         % Make CLI Ouput after test run
         if ~run
             ccaFailureSum = 0;
-            througputSum = 0;
+            throughoutSum = 0;
             delaySum = 0;
             
             for node = nodeList
-                througputSum = througputSum + mean(node.getThroughput());
-                delaySum = delaySum + mean(node.getDelay());
+                
+                throughoutList = node.getThroughput();
+                delayList = node.getDelay();
+                
+                throughoutSum = throughoutSum + mean(throughoutList);
+                delaySum = delaySum + mean(delayList);
                 ccaFailureSum = ccaFailureSum + node.getNotSend();
+            
+                if node.getId() ~= 0
+                    logData{nNodes}{node.getId()} = struct('throughput',...
+                                                        throughoutList,...
+                                                        'delay',...
+                                                        delayList);
+                end
             end
             
-            throughputLog(nNodes) = througputSum / nNodes;
-            delayLog(nNodes) = delaySum / nNodes;
-            
-            fprintf('Throughput mean: %f kbits\n', throughputLog(nNodes))
-            fprintf('Delay mean: %f s\n', delayLog(nNodes))
+            fprintf('Throughput mean: %f kbits\n', throughoutSum / nNodes)
+            fprintf('Delay mean: %f s\n', delaySum / nNodes)
             fprintf('CCA Failure sum: %d\n', ccaFailureSum)
         end
     end
@@ -120,9 +130,10 @@ end
 %     for n = 1:nodeNumber
 %         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;
 %     end
+% 
+% plot(1:maxNodeNumber, throughputLog);
+% xlabel('Number of nodes')
+% ylabel('mean throughput of all nodes [kbits]')
 
-plot(1:maxNodeNumber, throughputLog);
-xlabel('Number of nodes')
-ylabel('mean throughput of all nodes [kbits]')
 end
 

@@ -179,7 +179,8 @@ classdef NodeFiniteStateMachine < handle
                 throughputList = [];
                 return
             end
-            throughputList(size(obj.logDataList, 1)) = 0;
+            
+            throughputList(size(obj.logDataList), 1) = 0;
             
             for i = 1:size(obj.logDataList, 1)
                 if obj.logDataList(i, obj.transferredIndex)
@@ -209,7 +210,7 @@ classdef NodeFiniteStateMachine < handle
                     
                     delay = (endSlot - startSlot) * obj.TS; % kbits
                     
-                    delayList = [delayList delay]; %#ok<AGROW>
+                    delayList = [delayList; delay]; %#ok<AGROW>
                 end
             end
         end
