@@ -1,11 +1,11 @@
-function logDataCell = delayTest()
+function [delayArray, logDataCell] = delayTest()
 
 addpath StateMachines
 
 % Test Configurations %
 
-config = struct('minNodeNumber', 3,...
-                'maxNodeNumber', 3);
+config = struct('minNodeNumber', 1,...
+    'maxNodeNumber', 1);
 
 % global halper variables for sending behavior
 stopNoise = false;
@@ -16,7 +16,7 @@ payload = 0;
         switch node.getId()
             case 1  % delay test with increasing payload
                 packetsSend = node.getSend();
-                if packetsSend < 1100
+                if packetsSend < 1300
                     if mod(packetsSend,100) == 0
                         payload = packetsSend / 10; % packetsSend [0-109]
                     end
@@ -24,7 +24,7 @@ payload = 0;
                 else
                     stopNoise = true;
                 end
-                if packetsSend == 0 
+                if packetsSend == 0
                     stopNoise = false; % reset at start
                 end
             otherwise  % make some noise...
@@ -34,14 +34,15 @@ payload = 0;
         end
     end
 
-hookHandle = @nodeSendHook;  % create a function handle
+hookHandle = @nodeSendHook;  % register as function handle
 
 logDataCell = ChannelStateMachine(config, hookHandle);
 
-delayArray(11, 1) = 0; 
+delayArray(13, 1) = 0;
 
-for i = 0:100:1000
-    delayArray(fix((i + 100) / 100)) = mean(logDataCell{3}{1}.delay((i + 1) : (i + 99)));
+for i = 0:100:1200
+    delayArray(fix((i + 100) / 100)) =...
+        mean(logDataCell{1}{1}.delay((i + 1) : (i + 100)));
 end
 
 plot(delayArray)
@@ -49,7 +50,7 @@ plot(delayArray)
 %     for n = 1:nodeNumber
 %         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;
 %     end
-% 
+%
 % plot(1:config.maxNodeNumber, throughputLog);
 % xlabel('Number of nodes')
 % ylabel('mean throughput of all nodes [kbits]')
