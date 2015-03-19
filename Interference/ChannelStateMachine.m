@@ -1,8 +1,10 @@
 function ChannelStateMachine()
 
+                     % Test Configurations %
+
 % initialise nodes
-minNodeNumber = 1;
-maxNodeNumber = 5;
+minNodeNumber = 3;
+maxNodeNumber = 3;
 
 % global halper variables for sending behavior
 stopNoise = false;
@@ -13,7 +15,7 @@ payload = 0;
         switch node.getId()
             case 1  % delay test with increasing payload
                 packetsSend = node.getSend();
-                if packetsSend < 109
+                if packetsSend < 110
                     if mod(packetsSend,10) == 0
                         payload = packetsSend; % packetsSend [0-109]
                     end
@@ -30,6 +32,8 @@ payload = 0;
                 end
         end
     end
+
+                    % Channel State Machine %
 
 throughputLog(maxNodeNumber) = 0;
 delayLog(maxNodeNumber) = 0;
@@ -101,6 +105,7 @@ for nNodes = minNodeNumber:maxNodeNumber
                 delaySum = delaySum + mean(node.getDelay());
                 ccaFailureSum = ccaFailureSum + node.getNotSend();
             end
+            
             throughputLog(nNodes) = througputSum / nNodes;
             delayLog(nNodes) = delaySum / nNodes;
             
@@ -115,6 +120,7 @@ end
 %     for n = 1:nodeNumber
 %         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;
 %     end
+
 plot(1:maxNodeNumber, throughputLog);
 xlabel('Number of nodes')
 ylabel('mean throughput of all nodes [kbits]')

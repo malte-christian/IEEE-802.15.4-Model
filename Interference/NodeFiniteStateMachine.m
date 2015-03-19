@@ -175,7 +175,7 @@ classdef NodeFiniteStateMachine < handle
         end
         
         function throughputList = getThroughput(obj)
-            if size(obj.logDataList, 1) > 0 
+            if size(obj.logDataList, 1) == 0 
                 throughputList = [];
                 return
             end
