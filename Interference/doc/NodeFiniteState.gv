@@ -1,0 +1,15 @@
+digraph node_finite_state_machine {
+	rankdir=LR;
+	size="8,5"
+	node [shape = doublecircle]; idle;
+	node [shape = circle];
+	idle -> backoff [ label = "sendPacket" ];
+	backoff -> cca [ label = "" ];
+	cca -> idle [ label = "" ];
+	cca -> backoff [ label = "" ];
+	cca -> transmission [ label = "" ];
+	transmission -> idle [ label = "" ];
+	transmission -> collision [ label = "" ];
+	collision -> backoff [ label = "" ];
+	collision -> idle [ label = "" ];
+}
