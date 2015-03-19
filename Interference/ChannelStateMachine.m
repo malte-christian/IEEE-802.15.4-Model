@@ -3,7 +3,29 @@ function ChannelStateMachine()
 % initialise nodes
 minNodeNumber = 1;
 maxNodeNumber = 5;
-packetNumber = 100;
+
+% global halper variables for sending behavior
+stopNoise = false;
+payload = 0;
+
+    % node sending behavior 
+    function nodeSendHook(node, slot)
+        switch node.getId()
+            case 1  % delay test with increasing payload 
+                packetsSend = node.getSend();
+                if packetsSend < 100
+                    if mod(packetsSend,10) == 0
+                        payload = packetsSend; % packetsSend [0-100]
+                        fprintf('Set payload to: %d\n', payload)
+                    end
+                    node.sendPacket(slot, payload, 4, true);
+                end
+            otherwise  % make some noise...
+                if ~stopNoise
+                    node.sendPacket(slot, 100, 4, true);
+                end
+        end
+    end
 
 throughputLog(maxNodeNumber) = 0;
 delayLog(maxNodeNumber) = 0;
@@ -17,7 +39,7 @@ for nNodes = minNodeNumber:maxNodeNumber
     nodeList(1,nNodes) = NodeFiniteStateMachine(); %#ok<AGROW>
     
     for n=1:nNodes
-        nodeList(n) = NodeFiniteStateMachine();
+        nodeList(n) = NodeFiniteStateMachine(n);
         % node.sendPacket(100,4);
     end
     
@@ -31,7 +53,7 @@ for nNodes = minNodeNumber:maxNodeNumber
         slot = slot + 1;
         channelState = 'clear';
         run = false;
-         
+        
         % Determine current channel state
         for node = nodeList
             if strcmp(node.getState(), 'transmission')
@@ -45,15 +67,11 @@ for nNodes = minNodeNumber:maxNodeNumber
             
             % Invoke next transmission
             if strcmp(node.getState(), 'idle')
-                packetsSend = node.getSend()...
-                    + node.getNotSend();
-                if packetsSend <= packetNumber
-                    node.sendPacket(slot, 100, 4, true);
-                end
+                nodeSendHook(node, slot);  % defined above for better readability
             end
             
             % Stop if all nodes are idle
-           
+            
             if ~strcmp(node.getState(), 'idle')
                 run = true;
             end

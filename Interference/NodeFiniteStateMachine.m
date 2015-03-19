@@ -23,6 +23,7 @@ classdef NodeFiniteStateMachine < handle
     end
     
     properties
+        id;
         logDataList = [];
         state = 'idle';
         stateStartSlot = 0;
@@ -34,6 +35,19 @@ classdef NodeFiniteStateMachine < handle
     end
     
     methods
+        
+        function obj = NodeFiniteStateMachine(varargin)
+            if nargin > 0
+                obj.id = varargin{1};  % 'id' is optional
+            else
+                obj.id = 0;
+            end
+        end
+        
+        function id = getId(obj)
+            id = obj.id;
+        end
+        
         function send = getSend(obj)
             send = obj.send;
         end
@@ -42,12 +56,12 @@ classdef NodeFiniteStateMachine < handle
             notSend = obj.notSend;
         end
         
-        %         function reset(obj)
-        %             obj.transfered = 0;
-        %             obj.slots = 0;
-        %             obj.CSMABackoffs = 0;
-        %         end
-        %
+        function reset(obj)
+            obj.send = 0;
+            obj.notSend = 0;
+            obj.CSMABackoffs = 0;
+        end
+        
         function state = getState(obj)
             state = obj.state;
         end
@@ -182,15 +196,17 @@ classdef NodeFiniteStateMachine < handle
         end
         
         function delayList = getDelay(obj)
-            delayList(size(obj.logDataList, 1)) = 0;
+            delayList = [];
             
             for i = 1:size(obj.logDataList, 1)
-                startSlot = obj.logDataList(i, obj.startSlotIndex);
-                endSlot = obj.logDataList(i, obj.endSlotIndex);
-                
-                delay = (endSlot - startSlot) * obj.TS; % kbits
-                
-                delayList(i) = delay;
+                if obj.logDataList(i, obj.transferredIndex)
+                    startSlot = obj.logDataList(i, obj.startSlotIndex);
+                    endSlot = obj.logDataList(i, obj.endSlotIndex);
+                    
+                    delay = (endSlot - startSlot) * obj.TS; % kbits
+                    
+                    delayList = [delayList delay]; %#ok<AGROW>
+                end
             end
         end
     end
