@@ -8,17 +8,21 @@ maxNodeNumber = 5;
 stopNoise = false;
 payload = 0;
 
-    % node sending behavior 
+% node sending behavior
     function nodeSendHook(node, slot)
         switch node.getId()
-            case 1  % delay test with increasing payload 
+            case 1  % delay test with increasing payload
                 packetsSend = node.getSend();
-                if packetsSend < 100
+                if packetsSend < 109
                     if mod(packetsSend,10) == 0
-                        payload = packetsSend; % packetsSend [0-100]
-                        fprintf('Set payload to: %d\n', payload)
+                        payload = packetsSend; % packetsSend [0-109]
                     end
                     node.sendPacket(slot, payload, 4, true);
+                else
+                    stopNoise = true;
+                end
+                if packetsSend == 0 
+                    stopNoise = false; % reset at start
                 end
             otherwise  % make some noise...
                 if ~stopNoise
