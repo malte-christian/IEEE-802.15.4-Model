@@ -41,7 +41,7 @@ logDataCell = ChannelStateMachine(config, hookHandle);
 delayArray(11, 1) = 0; 
 
 for i = 1:100:1000
-    delayArray(fix((i + 10) / 100)) = mean(logDataCell{3}{1}.delay((i + 1) : (i + 99)));
+    delayArray(fix((i + 100) / 100)) = mean(logDataCell{3}{1}.delay((i + 1) : (i + 99)));
 end
 
 plot(delayArray)
