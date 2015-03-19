@@ -1,4 +1,4 @@
-function logData = delayTest()
+function logDataCell = delayTest()
 
 addpath StateMachines
 
@@ -16,9 +16,9 @@ payload = 0;
         switch node.getId()
             case 1  % delay test with increasing payload
                 packetsSend = node.getSend();
-                if packetsSend < 110
-                    if mod(packetsSend,10) == 0
-                        payload = packetsSend; % packetsSend [0-109]
+                if packetsSend < 1100
+                    if mod(packetsSend,100) == 0
+                        payload = packetsSend / 10; % packetsSend [0-109]
                     end
                     node.sendPacket(slot, payload, 4, true);
                 else
@@ -36,8 +36,15 @@ payload = 0;
 
 hookHandle = @nodeSendHook;  % create a function handle
 
-logData = ChannelStateMachine(config, hookHandle);
+logDataCell = ChannelStateMachine(config, hookHandle);
 
+delayArray(11, 1) = 0; 
+
+for i = 1:100:1000
+    delayArray(fix((i + 10) / 100)) = mean(logDataCell{3}{1}.delay((i + 1) : (i + 99)));
+end
+
+plot(delayArray)
 %    colorstring = 'kbgry';
 %     for n = 1:nodeNumber
 %         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;

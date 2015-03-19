@@ -1,6 +1,6 @@
-function logData =  ChannelStateMachine(config, nodeSendHook)
+function logDataCell =  ChannelStateMachine(config, nodeSendHook)
                   
-logData = cell(config.maxNodeNumber, 1);
+logDataCell = cell(config.maxNodeNumber, 1);
 
 for nNodes = config.minNodeNumber:config.maxNodeNumber
     fprintf('\nCalculating mean throughput of %d nodes...\n\n', nNodes)
@@ -19,7 +19,7 @@ for nNodes = config.minNodeNumber:config.maxNodeNumber
     slot = 0;
     
     % prepare logData
-    logData{nNodes} = cell(nNodes, 1);
+    logDataCell{nNodes} = cell(nNodes, 1);
     
     while run
         clear maxSleepSlots;
@@ -76,7 +76,7 @@ for nNodes = config.minNodeNumber:config.maxNodeNumber
                 ccaFailureSum = ccaFailureSum + node.getNotSend();
             
                 if node.getId() ~= 0
-                    logData{nNodes}{node.getId()} = struct('throughput',...
+                    logDataCell{nNodes}{node.getId()} = struct('throughput',...
                                                         throughoutList,...
                                                         'delay',...
                                                         delayList);
