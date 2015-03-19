@@ -17,7 +17,7 @@ for nNodes = minNodeNumber:maxNodeNumber
     nodeList(1,nNodes) = NodeFiniteStateMachine(); %#ok<AGROW>
     
     for n=1:nNodes
-        nodeList(n) = NodeFiniteStateMachine(); %#ok<AGROW>
+        nodeList(n) = NodeFiniteStateMachine();
         % node.sendPacket(100,4);
     end
     
@@ -72,12 +72,18 @@ for nNodes = minNodeNumber:maxNodeNumber
         if ~run
             ccaFailureSum = 0;
             througputSum = 0;
+            delaySum = 0;
+            
             for node = nodeList
-                througputSum = througputSum + node.getThroughput();
+                througputSum = througputSum + mean(node.getThroughput());
+                delaySum = delaySum + mean(node.getDelay());
                 ccaFailureSum = ccaFailureSum + node.getNotSend();
             end
             throughputLog(nNodes) = througputSum / nNodes;
+            delayLog(nNodes) = delaySum / nNodes;
+            
             fprintf('Throughput mean: %f kbits\n', throughputLog(nNodes))
+            fprintf('Delay mean: %f s\n', delayLog(nNodes))
             fprintf('CCA Failure sum: %d\n', ccaFailureSum)
         end
     end

@@ -42,12 +42,12 @@ classdef NodeFiniteStateMachine < handle
             notSend = obj.notSend;
         end
         
-%         function reset(obj)
-%             obj.transfered = 0;
-%             obj.slots = 0;
-%             obj.CSMABackoffs = 0;
-%         end
-%         
+        %         function reset(obj)
+        %             obj.transfered = 0;
+        %             obj.slots = 0;
+        %             obj.CSMABackoffs = 0;
+        %         end
+        %
         function state = getState(obj)
             state = obj.state;
         end
@@ -160,15 +160,33 @@ classdef NodeFiniteStateMachine < handle
             end
         end
         
-        function throughput = getThroughput(obj)
-            payload = 0;
-            for i = 1:size(obj.logDataList, 1)
-                payload = payload + obj.logDataList(i, obj.payloadIndex);
-            end
+        function throughputList = getThroughput(obj)
+            throughputList(size(obj.logDataList, 1)) = 0;
             
-            throughput = (payload * 8) ...
-                / ((obj.logDataList(end, obj.endSlotIndex)...
-                - obj.logDataList(1, obj.startSlotIndex)) * obj.TS) / 1000;
+            for i = 1:size(obj.logDataList, 1)
+                payload = obj.logDataList(i, obj.payloadIndex);
+                startSlot = obj.logDataList(i, obj.startSlotIndex);
+                endSlot = obj.logDataList(i, obj.endSlotIndex);
+                
+                throughput = (payload * 8)... % bits
+                    / ((endSlot - startSlot) * obj.TS)...
+                    / 1000; % kbits
+                
+                throughputList(i) = throughput;
+            end
+        end
+        
+        function delayList = getDelay(obj)
+            delayList(size(obj.logDataList, 1)) = 0;
+            
+            for i = 1:size(obj.logDataList, 1)
+                startSlot = obj.logDataList(i, obj.startSlotIndex);
+                endSlot = obj.logDataList(i, obj.endSlotIndex);
+                
+                delay = (endSlot - startSlot) * obj.TS; % kbits
+                
+                delayList(i) = delay;
+            end
         end
     end
 end
