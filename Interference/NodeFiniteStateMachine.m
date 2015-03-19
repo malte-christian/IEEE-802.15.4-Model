@@ -164,13 +164,18 @@ classdef NodeFiniteStateMachine < handle
             throughputList(size(obj.logDataList, 1)) = 0;
             
             for i = 1:size(obj.logDataList, 1)
-                payload = obj.logDataList(i, obj.payloadIndex);
-                startSlot = obj.logDataList(i, obj.startSlotIndex);
-                endSlot = obj.logDataList(i, obj.endSlotIndex);
+                if obj.logDataList(i, obj.transferredIndex)
+                    payload = obj.logDataList(i, obj.payloadIndex);
+                    startSlot = obj.logDataList(i, obj.startSlotIndex);
+                    endSlot = obj.logDataList(i, obj.endSlotIndex);
+                    
+                    throughput = (payload * 8)... % bits
+                        / ((endSlot - startSlot) * obj.TS)...
+                        / 1000; % kbits
+                else
+                    throughput = 0;
+                end
                 
-                throughput = (payload * 8)... % bits
-                    / ((endSlot - startSlot) * obj.TS)...
-                    / 1000; % kbits
                 
                 throughputList(i) = throughput;
             end
