@@ -6,6 +6,8 @@ classdef NodeFiniteStateMachine < handle
         SymbolsPerSlot = 4;
         RData = 250 * 1000;
         maxCSMABackoffs = 4;
+        maxFrameRetries = 3;
+        macAckWaitDuration = 54 / 4;
         TS = 0.000016; % Time per Slot
         LPhy = 6; % Length of the PHY header
         LMac_Hdr = 3; % Length of the MAC header
@@ -29,6 +31,7 @@ classdef NodeFiniteStateMachine < handle
         stateStartSlot = 0;
         TTrans;
         TBo;
+        ACK = 0;
         send = 0;
         notSend = 0;
         CSMABackoffs = 0;
@@ -104,6 +107,9 @@ classdef NodeFiniteStateMachine < handle
                         obj.logDataList(end, obj.endSlotIndex) = slot;
                         obj.logDataList(end, obj.transferredIndex) = true;
                     end
+                    
+                case 'collision'
+                    
             end
             
             if ~strcmp(obj.state, nextStep)
@@ -130,6 +136,7 @@ classdef NodeFiniteStateMachine < handle
             obj.state = 'backoff';
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength, ack);
+            obj.ACK = 1;
             
             logData(obj.startSlotIndex) = slot;
             logData(obj.payloadIndex) = payload;
