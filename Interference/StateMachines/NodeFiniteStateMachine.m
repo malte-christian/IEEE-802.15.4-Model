@@ -20,8 +20,9 @@ classdef NodeFiniteStateMachine < handle
         % Log Data indices%
         startSlotIndex = 1;
         endSlotIndex = 2;
-        transferredIndex = 3;
-        payloadIndex = 4;
+        ackSlotIndex = 3;
+        transferredIndex = 4;
+        payloadIndex = 5;
     end
     
     properties
@@ -31,7 +32,7 @@ classdef NodeFiniteStateMachine < handle
         stateStartSlot = 0;
         TTrans;
         TBo;
-        ACK = 0;
+        TACK = 0;
         send = 0;
         notSend = 0;
         CSMABackoffs = 0;
@@ -100,16 +101,29 @@ classdef NodeFiniteStateMachine < handle
                     end
                 case 'transmission'
                     if slot - obj.stateStartSlot >= obj.TTrans
+                        if obj.TACK
+                            nextStep = 'ACK';
+                        else
+                            nextStep = 'idle';
+                            obj.send = obj.send + 1;
+                            
+                            % Set log data
+                            obj.logDataList(end, obj.endSlotIndex) = slot;
+                            obj.logDataList(end, obj.transferredIndex) = true;
+                        end
+                    end
+                    
+                case 'ACK'
+                    if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
                         nextStep = 'idle';
                         obj.send = obj.send + 1;
                         
                         % Set log data
-                        obj.logDataList(end, obj.endSlotIndex) = slot;
+                        obj.logDataList(end, obj.endSlotIndex) = slot - obj.TACK;
+                        obj.logDataList(end, obj.ackSlotIndex) = slot;
                         obj.logDataList(end, obj.transferredIndex) = true;
+                        
                     end
-                    
-                case 'collision'
-                    
             end
             
             if ~strcmp(obj.state, nextStep)
@@ -135,8 +149,8 @@ classdef NodeFiniteStateMachine < handle
         function sendPacket(obj, slot, payload, addressLength, ack)
             obj.state = 'backoff';
             obj.setBackOffTime();
-            obj.setTransmissionTime(payload, addressLength, ack);
-            obj.ACK = 1;
+            obj.setTransmissionTime(payload, addressLength);
+            obj.setACKTime(ack);
             
             logData(obj.startSlotIndex) = slot;
             logData(obj.payloadIndex) = payload;
@@ -152,15 +166,11 @@ classdef NodeFiniteStateMachine < handle
             % obj.TBo = 3.5 * TBoSlots(obj.TS);
         end
         
-        function setTransmissionTime(obj,payload, addressLength, ack)
+        function setTransmissionTime(obj,payload, addressLength)
             
             % Frame delay
-            TFrame = @(x, RData, LAddress) 8 * ...
+            TFrame = @(x, LAddress) 8 * ...
                 (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr )...
-                / obj.SymbolsPerSlot;
-            
-            % Acknowledgement delay
-            TAck = @(RData) 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr)...
                 / obj.SymbolsPerSlot;
             
             % Inter frame space delay
@@ -173,16 +183,23 @@ classdef NodeFiniteStateMachine < handle
                 end
             end
             
-            obj.TTrans = TFrame(payload, obj.RData, addressLength)...
+            obj.TTrans = TFrame(payload, addressLength)...
                 + TIfs(payload, addressLength) + obj.TTa;
-            
+        end
+        
+        function setACKTime(obj, ack)
+            % Acknowledgement delay
             if ack
-                obj.TTrans = obj.TTrans + TAck(obj.RData);
+                obj.TACK = 8 * (obj.LPhy + obj.LMac_Hdr + obj.LMac_Ftr)...
+                    / obj.SymbolsPerSlot;
+            else
+                obj.TACK = 0;
             end
         end
         
+        
         function throughputList = getThroughput(obj)
-            if size(obj.logDataList, 1) == 0 
+            if size(obj.logDataList, 1) == 0
                 throughputList = [];
                 return
             end
