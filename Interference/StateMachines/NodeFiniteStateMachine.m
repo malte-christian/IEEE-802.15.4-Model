@@ -29,6 +29,7 @@ classdef NodeFiniteStateMachine < handle
         id;
         logDataList = [];
         state = 'idle';
+        collision = false;
         stateStartSlot = 0;
         TTrans;
         TBo;
@@ -100,6 +101,10 @@ classdef NodeFiniteStateMachine < handle
                         nextStep = 'cca';
                     end
                 case 'transmission'
+                    if strcmp(channelState, 'collision')
+                        obj.collision = true;
+                    end
+                    
                     if slot - obj.stateStartSlot >= obj.TTrans
                         if obj.TACK
                             nextStep = 'ACK';
@@ -109,11 +114,15 @@ classdef NodeFiniteStateMachine < handle
                             
                             % Set log data
                             obj.logDataList(end, obj.endSlotIndex) = slot;
-                            obj.logDataList(end, obj.transferredIndex) = true;
+                            obj.logDataList(end, obj.transferredIndex) = ~obj.collision;
                         end
                     end
                     
                 case 'ACK'
+                    if strcmp(channelState, 'collision')
+                        obj.collision = true;
+                    end
+                    
                     if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
                         nextStep = 'idle';
                         obj.send = obj.send + 1;
@@ -121,7 +130,7 @@ classdef NodeFiniteStateMachine < handle
                         % Set log data
                         obj.logDataList(end, obj.endSlotIndex) = slot - obj.TACK;
                         obj.logDataList(end, obj.ackSlotIndex) = slot;
-                        obj.logDataList(end, obj.transferredIndex) = true;
+                        obj.logDataList(end, obj.transferredIndex) = ~obj.collision;
                         
                     end
             end
@@ -140,6 +149,9 @@ classdef NodeFiniteStateMachine < handle
                     sleepSlots = obj.stateStartSlot + obj.TBo - slot;
                 case 'transmission'
                     sleepSlots = obj.stateStartSlot + obj.TTrans - slot;
+                case 'ACK'
+                    sleepSlots = obj.stateStartSlot...
+                        + obj.TTrans + obj.TACK - slot;
                 otherwise
                     sleepSlots = 0;
             end
@@ -151,6 +163,7 @@ classdef NodeFiniteStateMachine < handle
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength);
             obj.setACKTime(ack);
+            obj.collision = false;
             
             logData(obj.startSlotIndex) = slot;
             logData(obj.payloadIndex) = payload;

@@ -30,8 +30,15 @@ for nNodes = config.minNodeNumber:config.maxNodeNumber
         
         % Determine current channel state
         for node = nodeList
-            if strcmp(node.getState(), 'transmission') || strcmp(node.getState(), 'ACK')
-                channelState = 'busy';
+            if strcmp(node.getState(), 'transmission')...
+                    || strcmp(node.getState(), 'ACK')
+                if strcmp(channelState, 'busy')
+                    % collision
+                    channelState = 'collision';
+                    break;
+                else
+                    channelState = 'busy';
+                end
             end
         end
         
