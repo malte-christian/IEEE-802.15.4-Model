@@ -4,12 +4,12 @@ digraph node_finite_state_machine {
 	node [shape = doublecircle]; idle;
 	node [shape = circle];
 	idle -> backoff [ label = "sendPacket" ];
-	backoff -> cca [ label = "" ];
-	cca -> idle [ label = "" ];
-	cca -> backoff [ label = "" ];
-	cca -> transmission [ label = "" ];
-	transmission -> idle [ label = "" ];
-	transmission -> collision [ label = "" ];
-	collision -> backoff [ label = "" ];
-	collision -> idle [ label = "" ];
+	backoff -> cca [ label = "backoff finished" ];
+	cca -> idle [ label = "channel busy, maxCSMABackoffs" ];
+	cca -> backoff [ label = "channel busy" ];
+	cca -> transmission [ label = "channel clear" ];
+	transmission -> idle [ label = "transmissionFinished, ACK=0" ];
+	transmission -> ACK [ label = "transmissionFinished, ACK=1" ];
+	ACK -> backoff [ label = "noACK" ];
+	ACK -> idle [ label = "ACK" ];
 }
