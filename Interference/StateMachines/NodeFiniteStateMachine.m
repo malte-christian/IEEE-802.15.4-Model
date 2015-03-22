@@ -35,6 +35,7 @@ classdef NodeFiniteStateMachine < handle
         TTrans;
         TBo;
         TACK;
+        frameRetries;
         TIFS;
         send = 0;
         notSend = 0;
@@ -79,7 +80,6 @@ classdef NodeFiniteStateMachine < handle
                 case 'cca'
                     if strcmp(channelState, 'clear')
                         nextStep = 'transmission';
-                        
                         obj.CSMABackoffs = 0;
                     else
                         obj.CSMABackoffs = obj.CSMABackoffs + 1;
@@ -123,10 +123,19 @@ classdef NodeFiniteStateMachine < handle
                     end
                     
                     if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
-                        nextStep = 'IFS';
                         
-                        % Set log data
-                        obj.logDataList(end, obj.endAckSlotIndex) = slot;
+                        if obj.collision && obj.frameRetries < obj.maxFrameRetries
+                            % Retransmit
+                            % TODO: implement maxACKWait
+                            
+                            nextStep = 'backoff';
+                            obj.frameRetries = obj.frameRetries + 1;
+                        else
+                            nextStep = 'IFS';
+                            
+                            % Set log data
+                            obj.logDataList(end, obj.endAckSlotIndex) = slot;
+                        end
                     end
                     
                 case 'IFS'
@@ -202,7 +211,7 @@ classdef NodeFiniteStateMachine < handle
                 / obj.SymbolsPerSlot;
             
             obj.TTrans = TFrame(payload, addressLength)...
-                 + obj.TTa;
+                + obj.TTa;
         end
         
         function setIfsTime(obj, payload, LAddress)
