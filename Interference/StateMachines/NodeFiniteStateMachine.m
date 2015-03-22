@@ -19,10 +19,11 @@ classdef NodeFiniteStateMachine < handle
         
         % Log Data indices%
         startSlotIndex = 1;
-        endSlotIndex = 2;
-        ackSlotIndex = 3;
-        transferredIndex = 4;
-        payloadIndex = 5;
+        endTransSlotIndex = 2;
+        endAckSlotIndex = 3;
+        endIfsSlotIndex = 4;
+        transferredIndex = 5;
+        payloadIndex = 6;
     end
     
     properties
@@ -33,7 +34,8 @@ classdef NodeFiniteStateMachine < handle
         stateStartSlot = 0;
         TTrans;
         TBo;
-        TACK = 0;
+        TACK;
+        TIFS;
         send = 0;
         notSend = 0;
         CSMABackoffs = 0;
@@ -106,15 +108,12 @@ classdef NodeFiniteStateMachine < handle
                     end
                     
                     if slot - obj.stateStartSlot >= obj.TTrans
+                        obj.logDataList(end, obj.endTransSlotIndex) = slot - obj.TACK;
+                        
                         if obj.TACK
                             nextStep = 'ACK';
                         else
-                            nextStep = 'idle';
-                            obj.send = obj.send + 1;
-                            
-                            % Set log data
-                            obj.logDataList(end, obj.endSlotIndex) = slot;
-                            obj.logDataList(end, obj.transferredIndex) = ~obj.collision;
+                            nextStep = 'IFS';
                         end
                     end
                     
@@ -124,15 +123,27 @@ classdef NodeFiniteStateMachine < handle
                     end
                     
                     if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
-                        nextStep = 'idle';
-                        obj.send = obj.send + 1;
+                        nextStep = 'IFS';
                         
                         % Set log data
-                        obj.logDataList(end, obj.endSlotIndex) = slot - obj.TACK;
-                        obj.logDataList(end, obj.ackSlotIndex) = slot;
-                        obj.logDataList(end, obj.transferredIndex) = ~obj.collision;
-                        
+                        obj.logDataList(end, obj.endAckSlotIndex) = slot;
                     end
+                    
+                case 'IFS'
+                    if slot - obj.stateStartSlot - obj.TTrans - obj.TACK >= obj.TIFS
+                        nextStep = 'idle';
+                        
+                        if ~obj.collision
+                            obj.send = obj.send + 1;
+                        else
+                            obj.notSend = obj.notSend + 1;
+                        end
+                        
+                        % Set log data
+                        obj.logDataList(end, obj.endIfsSlotIndex) = slot;
+                        obj.logDataList(end, obj.transferredIndex) = ~obj.collision;
+                    end
+                    
             end
             
             if ~strcmp(obj.state, nextStep)
@@ -152,6 +163,9 @@ classdef NodeFiniteStateMachine < handle
                 case 'ACK'
                     sleepSlots = obj.stateStartSlot...
                         + obj.TTrans + obj.TACK - slot;
+                case 'IFS'
+                    sleepSlots = obj.stateStartSlot...
+                        + obj.TTrans + obj.TACK + obj.TIFS - slot;
                 otherwise
                     sleepSlots = 0;
             end
@@ -163,6 +177,7 @@ classdef NodeFiniteStateMachine < handle
             obj.setBackOffTime();
             obj.setTransmissionTime(payload, addressLength);
             obj.setACKTime(ack);
+            obj.setIfsTime(payload, addressLength);
             obj.collision = false;
             
             logData(obj.startSlotIndex) = slot;
@@ -186,18 +201,17 @@ classdef NodeFiniteStateMachine < handle
                 (obj.LPhy + obj.LMac_Hdr + LAddress + x + obj.LMac_Ftr )...
                 / obj.SymbolsPerSlot;
             
-            % Inter frame space delay
-            function y = TIfs(x, LAddress)
-                if (obj.LPhy + obj.LMac_Hdr + LAddress + x...
-                        + obj.LMac_Ftr <= 18) % TODO: CHECKEN! (ist nur geraten)
-                    y = obj.SIFS;
-                else
-                    y = obj.LIFS;
-                end
-            end
-            
             obj.TTrans = TFrame(payload, addressLength)...
-                + TIfs(payload, addressLength) + obj.TTa;
+                 + obj.TTa;
+        end
+        
+        function setIfsTime(obj, payload, LAddress)
+            if (obj.LPhy + obj.LMac_Hdr + LAddress + payload...
+                    + obj.LMac_Ftr <= 18) % TODO: CHECKEN! (ist nur geraten)
+                obj.TIFS = obj.SIFS;
+            else
+                obj.TIFS = obj.LIFS;
+            end
         end
         
         function setACKTime(obj, ack)
@@ -223,12 +237,7 @@ classdef NodeFiniteStateMachine < handle
                 if obj.logDataList(i, obj.transferredIndex)
                     payload = obj.logDataList(i, obj.payloadIndex);
                     startSlot = obj.logDataList(i, obj.startSlotIndex);
-                    
-                    if obj.logDataList(i, obj.ackSlotIndex) ~= 0
-                        endSlot = obj.logDataList(i, obj.ackSlotIndex);
-                    else
-                        endSlot = obj.logDataList(i, obj.endSlotIndex);
-                    end
+                    endSlot = obj.logDataList(i, obj.endIfsSlotIndex);
                     
                     throughput = (payload * 8)... % bits
                         / ((endSlot - startSlot) * obj.TS)...
@@ -248,7 +257,7 @@ classdef NodeFiniteStateMachine < handle
             for i = 1:size(obj.logDataList, 1)
                 if obj.logDataList(i, obj.transferredIndex)
                     startSlot = obj.logDataList(i, obj.startSlotIndex);
-                    endSlot = obj.logDataList(i, obj.endSlotIndex);
+                    endSlot = obj.logDataList(i, obj.endTransSlotIndex);
                     
                     delay = (endSlot - startSlot) * obj.TS; % kbits
                     

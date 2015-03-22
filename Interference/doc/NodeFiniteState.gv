@@ -4,12 +4,13 @@ digraph node_finite_state_machine {
 	node [shape = doublecircle]; idle;
 	node [shape = circle];
 	idle -> backoff [ label = "sendPacket" ];
-	backoff -> cca [ label = "backoff finished" ];
-	cca -> idle [ label = "channel busy, maxCSMABackoffs" ];
-	cca -> backoff [ label = "channel busy" ];
-	cca -> transmission [ label = "channel clear" ];
-	transmission -> idle [ label = "(transmissionFinished | collsision), ACK=0" ];
+	backoff -> CCA [ label = "backoff finished" ];
+	CCA -> idle [ label = "channel busy, maxCSMABackoffs" ];
+	CCA -> backoff [ label = "channel busy" ];
+	CCA -> transmission [ label = "channel clear" ];
+	transmission -> IFS [ label = "(transmissionFinished | collsision), ACK=0" ];
 	transmission -> ACK [ label = "(transmissionFinished | collsision), ACK=1" ];
 	ACK -> backoff [ label = "noACK" ];
-	ACK -> idle [ label = "ACK | noACK, maxRetransmit" ];
+	ACK -> IFS [ label = "ACK | noACK, maxRetransmit" ];
+	IFS -> idle [ label = "" ];
 }
