@@ -10,7 +10,7 @@ digraph node_finite_state_machine {
 	CCA -> transmission [ label = "channel clear" ];
 	transmission -> IFS [ label = "(transmissionFinished | collsision), ACK=0" ];
 	transmission -> ACK [ label = "(transmissionFinished | collsision), ACK=1" ];
-	ACK -> backoff [ label = "noACK" ];
+	ACK -> backoff [ label = "noACK, frameRetransmit < maxFrameRetransmit" ];
 	ACK -> IFS [ label = "ACK | noACK, maxRetransmit" ];
 	IFS -> idle [ label = "IFS finished" ];
 }
