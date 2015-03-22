@@ -86,7 +86,6 @@ classdef NodeFiniteStateMachine < handle
                         if obj.CSMABackoffs > obj.maxCSMABackoffs
                             
                             % Set log data
-                            obj.logDataList(end, obj.endSlotIndex) = slot;
                             obj.logDataList(end, obj.transferredIndex) = false;
                             
                             obj.notSend = obj.notSend + 1;
@@ -124,9 +123,10 @@ classdef NodeFiniteStateMachine < handle
                     
                     if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
                         
-                        if obj.collision && obj.frameRetries < obj.maxFrameRetries
+                        if obj.collision == true && obj.frameRetries < obj.maxFrameRetries
                             % Retransmit
                             % TODO: implement maxACKWait
+                            disp 'Retransmit'
                             
                             nextStep = 'backoff';
                             obj.frameRetries = obj.frameRetries + 1;
