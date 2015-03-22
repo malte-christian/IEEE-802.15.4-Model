@@ -8,8 +8,8 @@ digraph node_finite_state_machine {
 	cca -> idle [ label = "channel busy, maxCSMABackoffs" ];
 	cca -> backoff [ label = "channel busy" ];
 	cca -> transmission [ label = "channel clear" ];
-	transmission -> idle [ label = "transmissionFinished, ACK=0" ];
-	transmission -> ACK [ label = "transmissionFinished, ACK=1" ];
+	transmission -> idle [ label = "(transmissionFinished | collsision), ACK=0" ];
+	transmission -> ACK [ label = "(transmissionFinished | collsision), ACK=1" ];
 	ACK -> backoff [ label = "noACK" ];
-	ACK -> idle [ label = "ACK" ];
+	ACK -> idle [ label = "ACK | noACK, maxRetransmit" ];
 }
