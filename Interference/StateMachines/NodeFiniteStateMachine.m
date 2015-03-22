@@ -35,7 +35,7 @@ classdef NodeFiniteStateMachine < handle
         TTrans;
         TBo;
         TACK;
-        frameRetries;
+        frameRetries = 0;
         TIFS;
         send = 0;
         notSend = 0;
@@ -123,15 +123,16 @@ classdef NodeFiniteStateMachine < handle
                     
                     if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
                         
-                        if obj.collision == true && obj.frameRetries < obj.maxFrameRetries
+                        if obj.collision && obj.frameRetries < obj.maxFrameRetries
                             % Retransmit
                             % TODO: implement maxACKWait
-                            disp 'Retransmit'
                             
                             nextStep = 'backoff';
                             obj.frameRetries = obj.frameRetries + 1;
                         else
                             nextStep = 'IFS';
+                            
+                            obj.frameRetries = 0;
                             
                             % Set log data
                             obj.logDataList(end, obj.endAckSlotIndex) = slot;
