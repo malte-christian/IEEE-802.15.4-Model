@@ -12,5 +12,5 @@ digraph node_finite_state_machine {
 	transmission -> ACK [ label = "(transmissionFinished | collsision), ACK=1" ];
 	ACK -> backoff [ label = "noACK" ];
 	ACK -> IFS [ label = "ACK | noACK, maxRetransmit" ];
-	IFS -> idle [ label = "" ];
+	IFS -> idle [ label = "IFS finished" ];
 }
