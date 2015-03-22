@@ -42,7 +42,7 @@ delayArray(13, 1) = 0;
 
 for i = 0:100:1200
     delayArray(fix((i + 100) / 100)) =...
-        mean(logDataCell{1}{1}.delay((i + 1) : (i + 100)));
+        mean(logDataCell{config.maxNodeNumber}{1}.delay((i + 1) : (i + 100)));
 end
 
 plot(delayArray)

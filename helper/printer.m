@@ -1,11 +1,11 @@
 h1=figure;
-plot(1:1:120, delay_t)
+plot(0:1:119, delay_t)
 hold on
-plot(10:10:100, delay_inter)
-plot(10:10:100, delay_test)
+plot(0:10:120, delay_test_results)
+plot(10:10:100, practical_results)
 
 
-legend('Analytical Model without interference', 'Analytical Model with interference', 'Practical experiment')
+legend('Analytical Model without interference', 'Analytical Model with interference (3 nodes, full buffer)', 'Practical experiment (noise unkown)')
 xlabel('payload [byte]')
 ylabel('mean delay of 200 packets [s]')
 
