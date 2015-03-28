@@ -267,7 +267,7 @@ classdef NodeFiniteStateMachine < handle
             for i = 1:size(obj.logDataList, 1)
                 if obj.logDataList(i, obj.transferredIndex)
                     startSlot = obj.logDataList(i, obj.startSlotIndex);
-                    endSlot = obj.logDataList(i, obj.endTransSlotIndex);
+                    endSlot = obj.logDataList(i, obj.endIfsSlotIndex);
                     
                     delay = (endSlot - startSlot) * obj.TS; % kbits
                     
