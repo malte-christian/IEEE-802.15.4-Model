@@ -4,8 +4,8 @@ addpath StateMachines
 
 % Test Configurations %
 
-config = struct('minNodeNumber', 3,...
-    'maxNodeNumber', 3);
+config = struct('minNodeNumber', 5,...
+    'maxNodeNumber', 5);
 
 % global halper variables for sending behavior
 stopNoise = false;
