@@ -46,13 +46,5 @@ for i = 0:100:1200
 end
 
 plot(0:10:120, delayArray)
-%    colorstring = 'kbgry';
-%     for n = 1:nodeNumber
-%         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;
-%     end
-%
-% plot(1:config.maxNodeNumber, throughputLog);
-% xlabel('Number of nodes')
-% ylabel('mean throughput of all nodes [kbits]')
 
 end
