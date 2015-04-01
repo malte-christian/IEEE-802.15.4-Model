@@ -4,8 +4,8 @@ addpath StateMachines
 
 % Test Configurations %
 
-config = struct('minNodeNumber', 5,...
-    'maxNodeNumber', 5);
+config = struct('minNodeNumber', 3,...
+    'maxNodeNumber', 3);
 
 % global halper variables for sending behavior
 stopNoise = false;
@@ -45,7 +45,7 @@ for i = 0:100:1200
         mean(logDataCell{config.maxNodeNumber}{1}.delay((i + 1) : (i + 100)));
 end
 
-plot(delayArray)
+plot(0:10:120, delayArray)
 %    colorstring = 'kbgry';
 %     for n = 1:nodeNumber
 %         plot(results(n,:,1), results(n,:,2), colorstring(n)); hold on;

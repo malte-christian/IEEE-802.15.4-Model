@@ -37,7 +37,7 @@ TBo = BoSlots * TBoSlots(TS);
 
 % Inter frame space delay
 function y = TIfs(x, TS, LAddress)
-    if (LPhy + LMac_Hdr + LAddress + x + LMac_Ftr <= 18) % CHECKEN! (ist nur geraten)
+    if (LPhy + LMac_Hdr + LAddress + x + LMac_Ftr <= 18)
         y = SIFS(TS);
     else
         y = LIFS(TS);
@@ -60,6 +60,7 @@ result = zeros(1, intEnd);
 for i = 1:1:intEnd
     result(i) = delay(i, RData, TS, LAddress);
 end
-TP (100, RData, TS, LAddress)
+delay (110, RData, TS, LAddress)
+
 plot(1:1:intEnd, result)
 end

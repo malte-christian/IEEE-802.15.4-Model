@@ -121,7 +121,7 @@ classdef NodeFiniteStateMachine < handle
                         obj.collision = true;
                     end
                     
-                    if slot - obj.stateStartSlot - obj.TTrans >= obj.TACK
+                    if slot - obj.stateStartSlot >= obj.TACK
                         
                         if obj.collision && obj.frameRetries < obj.maxFrameRetries
                             % Retransmit
@@ -140,7 +140,7 @@ classdef NodeFiniteStateMachine < handle
                     end
                     
                 case 'IFS'
-                    if slot - obj.stateStartSlot - obj.TTrans - obj.TACK >= obj.TIFS
+                    if slot - obj.stateStartSlot >= obj.TIFS
                         nextStep = 'idle';
                         
                         if ~obj.collision
@@ -171,11 +171,9 @@ classdef NodeFiniteStateMachine < handle
                 case 'transmission'
                     sleepSlots = obj.stateStartSlot + obj.TTrans - slot;
                 case 'ACK'
-                    sleepSlots = obj.stateStartSlot...
-                        + obj.TTrans + obj.TACK - slot;
+                    sleepSlots = obj.stateStartSlot + obj.TACK - slot;
                 case 'IFS'
-                    sleepSlots = obj.stateStartSlot...
-                        + obj.TTrans + obj.TACK + obj.TIFS - slot;
+                    sleepSlots = obj.stateStartSlot + obj.TIFS - slot;
                 otherwise
                     sleepSlots = 0;
             end
@@ -217,7 +215,7 @@ classdef NodeFiniteStateMachine < handle
         
         function setIfsTime(obj, payload, LAddress)
             if (obj.LPhy + obj.LMac_Hdr + LAddress + payload...
-                    + obj.LMac_Ftr <= 18) % TODO: CHECKEN! (ist nur geraten)
+                    + obj.LMac_Ftr <= 18) 
                 obj.TIFS = obj.SIFS;
             else
                 obj.TIFS = obj.LIFS;
@@ -249,13 +247,11 @@ classdef NodeFiniteStateMachine < handle
                     startSlot = obj.logDataList(i, obj.startSlotIndex);
                     endSlot = obj.logDataList(i, obj.endIfsSlotIndex);
                     
-                    throughput = (payload * 8)... % bits
-                        / ((endSlot - startSlot) * obj.TS)...
-                        / 1000; % kbits
+                    throughput = (payload * 8 / 1000)... % bits
+                        / ((endSlot - startSlot) * obj.TS); % kbits
                 else
                     throughput = 0;
                 end
-                
                 
                 throughputList(i) = throughput;
             end
@@ -269,7 +265,7 @@ classdef NodeFiniteStateMachine < handle
                     startSlot = obj.logDataList(i, obj.startSlotIndex);
                     endSlot = obj.logDataList(i, obj.endIfsSlotIndex);
                     
-                    delay = (endSlot - startSlot) * obj.TS; % kbits
+                    delay = (endSlot - startSlot) * obj.TS; % s
                     
                     delayList = [delayList; delay]; %#ok<AGROW>
                 end

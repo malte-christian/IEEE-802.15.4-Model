@@ -3,7 +3,7 @@ function [throughputArray, logDataCell] = throughputTest()
 addpath StateMachines
 
 % Test Configurations %
-payload = 120;
+payload = 110;
 ack = true;
 
 config = struct('minNodeNumber', 1,...
